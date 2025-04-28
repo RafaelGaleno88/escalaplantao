@@ -12,8 +12,8 @@
 <h1>Login - Escala de Plantonistas</h1>
 
 <div id="login-section">
-  <input type="email" id="login-email" placeholder="Email"><br>
-  <input type="password" id="login-password" placeholder="Senha"><br>
+  <input type="text" id="login-usuario" placeholder="Usuário"><br>
+  <input type="password" id="login-senha" placeholder="Senha"><br>
   <button onclick="login()">Entrar</button>
   <button onclick="mostrarCadastro()">Cadastrar Plantonista</button>
   <button onclick="mostrarRecuperarSenha()">Esqueceu a Senha?</button>
@@ -21,9 +21,9 @@
 
 <div id="cadastro-section" style="display:none">
   <h2>Cadastro de Plantonista</h2>
+  <input type="text" id="usuario" placeholder="Nome de Usuário"><br>
+  <input type="password" id="senha" placeholder="Senha"><br>
   <input type="text" id="nome" placeholder="Nome Completo"><br>
-  <input type="email" id="email" placeholder="Email (será o login)"><br>
-  <input type="password" id="senha" placeholder="Senha">
   <input type="text" id="telefone" placeholder="Telefone"><br>
   <input type="text" id="crm" placeholder="CRM"><br>
   <input type="text" id="cpf" placeholder="CPF"><br>
@@ -57,16 +57,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-function login() {
-  const email = document.getElementById('login-email').value;
-  const senha = document.getElementById('login-password').value;
+// Criar admin inicial
+firebase.database().ref('usuarios/RafaelGaleno').set({
+  username: 'RafaelGaleno',
+  password: 'Galeno123',
+  cpf: 'admin',
+  crm: 'admin',
+  isAdmin: true
+});
 
-  firebase.database().ref('usuarios').orderByChild('email').equalTo(email).once('value', snapshot => {
+function login() {
+  const usuario = document.getElementById('login-usuario').value;
+  const senha = document.getElementById('login-senha').value;
+
+  firebase.database().ref('usuarios/' + usuario).once('value', snapshot => {
     if (snapshot.exists()) {
-      const data = Object.values(snapshot.val())[0];
+      const data = snapshot.val();
       if (data.password === senha) {
         alert('Login realizado com sucesso!');
-        // Aqui futuramente vamos direcionar para a escala
+        // Aqui futuramente direcionar para a escala
       } else {
         alert('Senha incorreta!');
       }
@@ -93,9 +102,9 @@ function voltarLogin() {
 }
 
 function cadastrarPlantonista() {
-  const nome = document.getElementById('nome').value;
-  const email = document.getElementById('email').value;
+  const usuario = document.getElementById('usuario').value;
   const senha = document.getElementById('senha').value;
+  const nome = document.getElementById('nome').value;
   const telefone = document.getElementById('telefone').value;
   const crm = document.getElementById('crm').value;
   const cpf = document.getElementById('cpf').value;
@@ -104,13 +113,13 @@ function cadastrarPlantonista() {
   const especialidade = document.getElementById('especialidade').value;
   const rqe = document.getElementById('rqe').value;
 
-  if (!nome || !email || !senha || !crm || !cpf) {
+  if (!usuario || !senha || !nome || !crm || !cpf) {
     alert('Preencha os campos obrigatórios!');
     return;
   }
 
-  firebase.database().ref('usuarios').push({
-    email: email,
+  firebase.database().ref('usuarios/' + usuario).set({
+    username: usuario,
     password: senha,
     cpf: cpf,
     crm: crm,
@@ -119,7 +128,7 @@ function cadastrarPlantonista() {
 
   firebase.database().ref('plantonistas').push({
     nome: nome,
-    email: email,
+    usuario: usuario,
     telefone: telefone,
     crm: crm,
     cpf: cpf,
