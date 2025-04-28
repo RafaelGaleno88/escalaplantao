@@ -21,6 +21,29 @@
   <input type="text" id="login-usuario" placeholder="Usuário"><br>
   <input type="password" id="login-senha" placeholder="Senha"><br>
   <button onclick="login()">Entrar</button>
+  <button onclick="mostrarCadastro()">Cadastrar Plantonista</button>
+  <button onclick="mostrarRecuperarSenha()">Esqueceu a Senha?</button>
+</div>
+
+<div id="cadastro-section" class="hidden">
+  <h2>Cadastro de Plantonista</h2>
+  <input type="text" id="novo-usuario" placeholder="Usuário"><br>
+  <input type="password" id="novo-senha" placeholder="Senha"><br>
+  <input type="text" id="novo-nome" placeholder="Nome Completo"><br>
+  <input type="text" id="novo-telefone" placeholder="Telefone"><br>
+  <input type="text" id="novo-crm" placeholder="CRM"><br>
+  <input type="text" id="novo-cpf" placeholder="CPF"><br>
+  <button onclick="cadastrarPlantonista()">Cadastrar</button>
+  <button onclick="voltarLogin()">Voltar</button>
+</div>
+
+<div id="recuperar-section" class="hidden">
+  <h2>Recuperar Senha</h2>
+  <input type="text" id="recuperar-crm" placeholder="Informe seu CRM"><br>
+  <input type="text" id="recuperar-cpf" placeholder="Informe seu CPF"><br>
+  <input type="password" id="nova-senha" placeholder="Nova Senha"><br>
+  <button onclick="recuperarSenha()">Alterar Senha</button>
+  <button onclick="voltarLogin()">Voltar</button>
 </div>
 
 <div id="escala-section" class="hidden">
@@ -41,36 +64,7 @@
         <th>Domingo</th>
       </tr>
     </thead>
-    <tbody id="escala-body">
-      <tr>
-        <td>Emergência Adulta</td>
-        <td>Clínico</td>
-        <td>Plantonista</td>
-        <td>07h–19h</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-      </tr>
-      <tr>
-        <td>Emergência Adulta</td>
-        <td>Cardiologista</td>
-        <td>Chefe de Plantão</td>
-        <td>19h–07h</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-      </tr>
-      <tr>
-        <td>Emergência Adulta</td>
-        <td>Ortopedista</td>
-        <td>Plantonista</td>
-        <td>07h–19h</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-      </tr>
-      <tr>
-        <td>Emergência Adulta</td>
-        <td>Cirurgião Geral</td>
-        <td>Plantonista</td>
-        <td>19h–07h</td>
-        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-      </tr>
-    </tbody>
+    <tbody id="escala-body"></tbody>
   </table>
   <button id="editar-escala" class="hidden" onclick="editarEscala()">Editar Escala</button>
   <button id="salvar-escala" class="hidden" onclick="salvarEscala()">Salvar Escala</button>
@@ -90,6 +84,22 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+function mostrarCadastro() {
+  document.getElementById('login-section').classList.add('hidden');
+  document.getElementById('cadastro-section').classList.remove('hidden');
+}
+
+function mostrarRecuperarSenha() {
+  document.getElementById('login-section').classList.add('hidden');
+  document.getElementById('recuperar-section').classList.remove('hidden');
+}
+
+function voltarLogin() {
+  document.getElementById('cadastro-section').classList.add('hidden');
+  document.getElementById('recuperar-section').classList.add('hidden');
+  document.getElementById('login-section').classList.remove('hidden');
+}
+
 function login() {
   const usuario = document.getElementById('login-usuario').value;
   const senha = document.getElementById('login-senha').value;
@@ -100,6 +110,7 @@ function login() {
       if (data.password === senha) {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('escala-section').style.display = 'block';
+        carregarEscala();
         if (data.isAdmin) {
           document.getElementById('editar-escala').classList.remove('hidden');
         }
@@ -108,6 +119,83 @@ function login() {
       }
     } else {
       alert('Usuário não encontrado!');
+    }
+  });
+}
+
+function cadastrarPlantonista() {
+  const usuario = document.getElementById('novo-usuario').value;
+  const senha = document.getElementById('novo-senha').value;
+  const nome = document.getElementById('novo-nome').value;
+  const telefone = document.getElementById('novo-telefone').value;
+  const crm = document.getElementById('novo-crm').value;
+  const cpf = document.getElementById('novo-cpf').value;
+
+  if (!usuario || !senha || !nome || !crm || !cpf) {
+    alert('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  firebase.database().ref('usuarios/' + usuario).set({
+    username: usuario,
+    password: senha,
+    cpf: cpf,
+    crm: crm,
+    isAdmin: false
+  });
+
+  firebase.database().ref('plantonistas').push({
+    nome: nome,
+    telefone: telefone,
+    crm: crm,
+    cpf: cpf
+  }).then(() => {
+    alert('Cadastro realizado com sucesso!');
+    voltarLogin();
+  }).catch(error => {
+    alert('Erro ao cadastrar: ' + error.message);
+  });
+}
+
+function recuperarSenha() {
+  const crm = document.getElementById('recuperar-crm').value;
+  const cpf = document.getElementById('recuperar-cpf').value;
+  const novaSenha = document.getElementById('nova-senha').value;
+
+  firebase.database().ref('usuarios').once('value', snapshot => {
+    let encontrado = false;
+    snapshot.forEach(child => {
+      const user = child.val();
+      if (user.crm === crm && user.cpf === cpf) {
+        firebase.database().ref('usuarios/' + child.key).update({ password: novaSenha });
+        alert('Senha alterada com sucesso!');
+        encontrado = true;
+        voltarLogin();
+      }
+    });
+    if (!encontrado) {
+      alert('CRM ou CPF incorretos.');
+    }
+  });
+}
+
+function carregarEscala() {
+  const escalaBody = document.getElementById('escala-body');
+  escalaBody.innerHTML = '';
+
+  database.ref('escala').once('value', snapshot => {
+    if (snapshot.exists()) {
+      snapshot.val().forEach(linha => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${linha.setor}</td>
+          <td>${linha.especialidade}</td>
+          <td>${linha.cargo}</td>
+          <td>${linha.horario}</td>
+          ${linha.dias.map(dia => `<td>${dia}</td>`).join('')}
+        `;
+        escalaBody.appendChild(tr);
+      });
     }
   });
 }
@@ -184,4 +272,3 @@ function salvarEscala() {
 
 </body>
 </html>
-
