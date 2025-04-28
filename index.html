@@ -21,11 +21,7 @@
   <input type="text" id="login-usuario" placeholder="Usuário"><br>
   <input type="password" id="login-senha" placeholder="Senha"><br>
   <button onclick="login()">Entrar</button>
-  <button onclick="mostrarCadastro()">Cadastrar Plantonista</button>
-  <button onclick="mostrarRecuperarSenha()">Esqueceu a Senha?</button>
 </div>
-
-<!-- Cadastro e Recuperação mantidos -->
 
 <div id="escala-section" class="hidden">
   <h2>Escala de Plantonistas - Emergência Adulta</h2>
@@ -76,7 +72,8 @@
       </tr>
     </tbody>
   </table>
-  <button id="editar-escala" class="hidden">Editar Escala</button>
+  <button id="editar-escala" class="hidden" onclick="editarEscala()">Editar Escala</button>
+  <button id="salvar-escala" class="hidden" onclick="salvarEscala()">Salvar Escala</button>
 </div>
 
 <script>
@@ -114,7 +111,77 @@ function login() {
     }
   });
 }
+
+function editarEscala() {
+  const escalaBody = document.getElementById('escala-body');
+
+  firebase.database().ref('plantonistas').once('value', snapshot => {
+    const plantonistas = [];
+    snapshot.forEach(childSnapshot => {
+      const plantonista = childSnapshot.val();
+      if (plantonista.nome) {
+        plantonistas.push(plantonista.nome);
+      }
+    });
+
+    Array.from(escalaBody.querySelectorAll('tr')).forEach(row => {
+      for (let i = 4; i <= 10; i++) {
+        const cell = row.children[i];
+        const select = document.createElement('select');
+
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '';
+        select.appendChild(emptyOption);
+
+        plantonistas.forEach(nome => {
+          const option = document.createElement('option');
+          option.value = nome;
+          option.textContent = nome;
+          select.appendChild(option);
+        });
+
+        const currentValue = cell.textContent;
+        cell.innerHTML = '';
+        cell.appendChild(select);
+
+        if (currentValue) {
+          select.value = currentValue;
+        }
+      }
+    });
+    document.getElementById('salvar-escala').classList.remove('hidden');
+  });
+}
+
+function salvarEscala() {
+  const escalaBody = document.getElementById('escala-body');
+  const novaEscala = [];
+
+  Array.from(escalaBody.querySelectorAll('tr')).forEach(row => {
+    const linha = {
+      setor: row.children[0].textContent,
+      especialidade: row.children[1].textContent,
+      cargo: row.children[2].textContent,
+      horario: row.children[3].textContent,
+      dias: []
+    };
+    for (let i = 4; i <= 10; i++) {
+      const select = row.children[i].querySelector('select');
+      linha.dias.push(select ? select.value : '');
+    }
+    novaEscala.push(linha);
+  });
+
+  database.ref('escala/').set(novaEscala).then(() => {
+    alert('Escala salva com sucesso!');
+    location.reload();
+  }).catch(error => {
+    alert('Erro ao salvar a escala: ' + error.message);
+  });
+}
 </script>
 
 </body>
 </html>
+
