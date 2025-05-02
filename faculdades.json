@@ -1,0 +1,71 @@
+[
+  {
+    "nome": "USP",
+    "campi": [
+      "São Paulo",
+      "Ribeirão Preto",
+      "Bauru"
+    ]
+  },
+  {
+    "nome": "UFRJ",
+    "campi": [
+      "Ilha do Fundão",
+      "Macaé"
+    ]
+  },
+  {
+    "nome": "UFMG",
+    "campi": [
+      "Belo Horizonte"
+    ]
+  },
+  {
+    "nome": "Unicamp",
+    "campi": [
+      "Campinas"
+    ]
+  },
+  {
+    "nome": "UNIFESP",
+    "campi": [
+      "São Paulo"
+    ]
+  },
+  {
+    "nome": "PUC-SP",
+    "campi": [
+      "Sorocaba",
+      "Campinas"
+    ]
+  },
+  {
+    "nome": "PUC-Rio",
+    "campi": [
+      "Gávea"
+    ]
+  },
+  {
+    "nome": "PUC-Minas",
+    "campi": [
+      "Contagem",
+      "Betim",
+      "Belo Horizonte"
+    ]
+  },
+  {
+    "nome": "Estácio de Sá",
+    "campi": [
+      "Rio de Janeiro",
+      "Nova Friburgo",
+      "Juiz de Fora"
+    ]
+  },
+  {
+    "nome": "Anhembi Morumbi",
+    "campi": [
+      "São Paulo",
+      "Piracicaba"
+    ]
+  }
+]
